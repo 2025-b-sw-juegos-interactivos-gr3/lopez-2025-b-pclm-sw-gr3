@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Personaje GLB animado manualmente</title>
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  <script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.js"></script>
+  <style>
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    canvas { width: 100%; height: 100%; display: block; }
+  </style>
+</head>
+<body>
+<canvas id="renderCanvas"></canvas>
+<script>
+const canvas = document.getElementById("renderCanvas");
+const engine = new BABYLON.Engine(canvas, true);
+
+function createScene() {
+  let datatime = 0;
+  let velocidad = 0.08;
+  const turnSpeed = 0.06; // velocidad de giro (radianes por frame). Ajusta según prefieras.
+
+  const scene = new BABYLON.Scene(engine);
+  scene.clearColor = new BABYLON.Color3(0.7, 0.9, 1);
+
+  // parámetros de cámara (ajusta aquí)
+  const camRadius = 8;            // distancia atrás del personaje
+  const camHeight = 3.5;          // altura sobre el personaje
+  const camPitchDeg = 20;         // inclinación hacia abajo en grados
+  const camSmoothPos = 0.12;      // suavizado posición (0..1)
+  const camSmoothYaw = 0.08;      // suavizado giro (0..1)
+  const camSmoothLookAt = 0.12;   // suavizado target lookAt
+
+  // Ajuste según orientación del modelo GLTF:
+  // 0 -> si el "frente" del modelo ya apunta en +Z del mundo,
+  // Math.PI -> si el frente del modelo apunta en -Z (gira 180°)
+  const modelFacingOffset = Math.PI;
+
+  const camPitch = BABYLON.Tools.ToRadians(camPitchDeg);
+
+  // Cámara manual en tercera persona (sin control directo del usuario)
+  const tpCamera = new BABYLON.FreeCamera("TP_Cam", new BABYLON.Vector3(0, camHeight, -camRadius), scene);
+  tpCamera.minZ = 0.1;
+  scene.activeCamera = tpCamera;
+  tpCamera.attachControl(canvas, true);
+  tpCamera.inputs.removeByType("FreeCameraMouseInput");
+  tpCamera.inputs.removeByType("FreeCameraKeyboardMoveInput");
+
+  // estado suavizado
+  let camLookAt = new BABYLON.Vector3(0, 1.5, 0);
+
+  const light = new BABYLON.HemisphericLight("h", new BABYLON.Vector3(0, 1, 0), scene);
+  light.intensity = 1.2;
+
+  const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 200, height: 200 }, scene);
+  const groundMat = new BABYLON.StandardMaterial("groundMat", scene);
+  groundMat.diffuseTexture = new BABYLON.Texture("https://images.unsplash.com/photo-1589496933738-f5c27bc146e3?q=80&w=687&auto=format&fit=crop", scene);
+  ground.material = groundMat;
+
+  const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", { size: 1000 }, scene);
+  const skyboxMaterial = new BABYLON.StandardMaterial("skyBoxMat", scene);
+  skyboxMaterial.backFaceCulling = false;
+  skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("https://assets.babylonjs.com/environments/environmentSpecular.env", scene);
+  skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+  skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
+  skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+  skybox.material = skyboxMaterial;
+
+  let yetiRoot = null;
+  let yetiSkeleton = null;
+  let yetiMesh = null;
+
+  BABYLON.SceneLoader.ImportMeshAsync(null, "assets/model/", "Yeti.gltf", scene).then((result) => {
+    const meshes = result.meshes;
+    const skeletons = result.skeletons;
+    if (meshes && meshes.length) {
+      yetiRoot = new BABYLON.TransformNode("yetiRoot", scene);
+      yetiMesh = meshes[0];
+      yetiMesh.parent = yetiRoot;
+      yetiMesh.scaling = new BABYLON.Vector3(0.1, 0.1, 0.1);
+      yetiRoot.position = new BABYLON.Vector3(0, 0, 0);
+      if (skeletons && skeletons.length > 0) {
+        yetiSkeleton = skeletons[0];
+      }
+      console.log('Yeti cargado desde assets/model/Yeti.gltf');
+    }
+  }).catch((err) => {
+    console.error('No se pudo cargar el modelo Yeti desde assets/model/Yeti.gltf:', err);
+  });
+
+  const keys = {};
+  window.addEventListener("keydown", e => keys[e.code] = true);
+  window.addEventListener("keyup", e => keys[e.code] = false);
+
+  scene.onBeforeRenderObservable.add(() => {
+    datatime = performance.now() * 0.005;
+    let dx = 0, dz = 0;
+    if (keys["KeyW"]) dz += 1;
+    if (keys["KeyS"]) dz -= 1;
+    if (keys["KeyD"]) dx += 1;
+    if (keys["KeyA"]) dx -= 1;
+
+    if (yetiRoot) {
+      const turnLeft = keys["KeyA"];
+      const turnRight = keys["KeyD"];
+      const moveForward = keys["KeyW"];
+      const moveBack = keys["KeyS"];
+
+      // aplicar giro
+      const turn = (turnRight ? 1 : 0) - (turnLeft ? 1 : 0);
+      if (turn !== 0) {
+        yetiRoot.rotation.y += turn * turnSpeed;
+      }
+
+      // mover en la dirección frontal del personaje (teniendo en cuenta modelFacingOffset)
+      const move = (moveForward ? 1 : 0) - (moveBack ? 1 : 0);
+      if (move !== 0) {
+        const yaw = yetiRoot.rotation.y || 0;
+        const forward = new BABYLON.Vector3(Math.sin(yaw - modelFacingOffset), 0, Math.cos(yaw - modelFacingOffset));
+        yetiRoot.position.addInPlace(forward.scale(velocidad * move));
+      }
+    }
+
+    // Cámara: siempre atrás y arriba del personaje, con suavizado y giro lento
+    if (yetiRoot) {
+      const yaw = yetiRoot.rotation.y || 0;
+      // poner la cámara detrás del personaje teniendo en cuenta el offset de orientación del modelo
+      const targetYaw = yaw + Math.PI - modelFacingOffset;
+      // calcular yaw actual desde personaje hacia cámara
+      const toCamX = tpCamera.position.x - yetiRoot.position.x;
+      const toCamZ = tpCamera.position.z - yetiRoot.position.z;
+      let currentYaw = Math.atan2(toCamX, toCamZ);
+
+      // delta mínimo (-PI..PI)
+      let deltaYaw = targetYaw - currentYaw;
+      deltaYaw = ((deltaYaw + Math.PI) % (2 * Math.PI)) - Math.PI;
+
+      // avanzar yaw suavemente
+      const newYaw = currentYaw + deltaYaw * camSmoothYaw;
+
+      // nueva posición en XZ manteniendo camRadius
+      const newPosXZ = new BABYLON.Vector3(Math.sin(newYaw) * camRadius, 0, Math.cos(newYaw) * camRadius);
+      // desiredPos = atrás del personaje + altura
+      const desiredPos = yetiRoot.position.add(newPosXZ).add(new BABYLON.Vector3(0, camHeight, 0));
+      // interpola posición
+      tpCamera.position = BABYLON.Vector3.Lerp(tpCamera.position, desiredPos, camSmoothPos);
+
+      // controlar pitch (inclinación hacia abajo) suavemente
+      const desiredLookAt = yetiRoot.position.add(new BABYLON.Vector3(0, 1.5, 0)); // punto a mirar
+      camLookAt = BABYLON.Vector3.Lerp(camLookAt, desiredLookAt, camSmoothLookAt);
+
+      // aplicar inclinación: forzar que la cámara mire al punto deseado pero con pitch fijo cercano a camPitch
+      tpCamera.setTarget(camLookAt);
+
+      // ajustar rotación.x (pitch) hacia -camPitch suavemente
+      const currentPitch = tpCamera.rotation.x;
+      const desiredPitch = -camPitch;
+      tpCamera.rotation.x = BABYLON.Scalar.Lerp(currentPitch, desiredPitch, camSmoothYaw);
+    }
+  });
+
+  return scene;
+}
+
+const scene = createScene();
+engine.runRenderLoop(() => scene.render());
+window.addEventListener("resize", () => engine.resize());
+</script>
+</body>
+</html>
