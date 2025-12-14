@@ -47,12 +47,14 @@ modelos/
 
 ## ▶️ Cómo ejecutar
 
-1. Abre `index.html` en un navegador con WebGL (doble clic o arrastrar al navegador).
-2. Si los archivos usan CDNs (Babylon.js), se recomienda conexión a internet la primera vez.
-3. Se recomienda usar Chrome, Edge o Firefox moderno.
-
-Notas:
-- Si cargas los archivos desde el sistema de archivos y experimentas problemas con importación de módulos, sirve ejecutar un servidor local simple (p. ej. `python -m http.server` desde la carpeta del proyecto).
+1. El proyecto carga Babylon.js y complementos desde CDNs, por lo que **es necesaria conexión a internet** para cargar esas librerías.
+2. Los modelos 3D (.gltf/.bin/.png) y la carga mediante GLTFLoader o peticiones XHR/fetch requieren que los archivos se sirvan por HTTP(S); abrir `index.html` con doble clic (protocolo `file://`) normalmente impide la carga de modelos.
+3. Recomendado (desarrollo): usar la extensión **Live Server** de Visual Studio Code. Pasos rápidos:
+  - Abre la carpeta del proyecto en VS Code.
+  - Haz clic en "Go Live" en la barra de estado (o botón derecho > "Open with Live Server").
+  - Live Server abrirá la URL local (por ejemplo `http://127.0.0.1:5500/`) donde la escena cargará correctamente.
+4. Alternativas: cualquier servidor estático local (p. ej. `http-server` de npm o `npx serve .`) funciona igualmente.
+5. Navegadores recomendados: Chrome, Edge o Firefox (versiones modernas con WebGL habilitado). Revisa la consola del navegador si los modelos no cargan.
 
 ---
 
