@@ -1,156 +1,95 @@
+
 # 🚑 Juego de Ambulancia 3D – Babylon.js
 
-Este proyecto es un **simulador 3D interactivo** desarrollado con **Babylon.js**, donde controlas una ambulancia que debe recoger pacientes generados aleatoriamente y llevarlos al hospital para ganar puntos. Todo el proyecto funciona desde un único archivo **HTML** usando JavaScript incrustado, sin necesidad de servidores o archivos externos adicionales (salvo los modelos 3D).
+Simulador 3D educativo creado con Babylon.js. Controlas una ambulancia que debe recoger pacientes y llevarlos al hospital. El proyecto usa modelos 3D en la carpeta `modelos/` y se ejecuta directamente en el navegador.
 
 ---
 
-## 📝 Características del Proyecto
+## 📝 Características
 
-- Mundo 3D completo construido con Babylon.js  
-- Carreteras rectas y una carretera curva generada con extrusión  
-- Aceras, pasto, casas, árboles y farolas decorativas  
-- Modelos 3D importados: ambulancia, hospital y paciente  
-- Sistema de recogida y entrega de pacientes  
-- Holograma animado con anillos y luz de tipo sci-fi  
-- Cámara de seguimiento con cinemática  
-- Colisiones físicas y paredes invisibles  
-- HUD con contador de pacientes  
-- Código refactorizado y organizado  
+- Mundo 3D construido con Babylon.js
+- Carreteras (rectas y curva generada por extrusión)
+- Aceras, pasto, casas, árboles y farolas
+- Modelos 3D importados: ambulancia, hospital y persona
+- Sistema de recogida y entrega de pacientes
+- Holograma visual para destacar pacientes
+- Cámara de seguimiento y pequeñas cinemáticas
+- HUD simple con contador de pacientes
 
 ---
 
-## 📁 Estructura del Proyecto
+## 📁 Estructura del proyecto
 
+Raíz del proyecto:
+
+- `index.html` — página principal que carga la escena y los scripts
+- `css/` — estilos (p. ej. `css/styles.css`)
+- `js/` — scripts JavaScript del juego (escena, lógica, utilidades)
+- `modelos/` — modelos 3D (subcarpetas: `ambulancia/`, `hospital/`, `persona/`)
+
+Ejemplo:
+
+```
 index.html
+css/
+  └─ styles.css
+js/
+  ├─ config/
+  ├─ scene/
+  └─ game/
 modelos/
-├─ ambulancia/
-├─ persona/
-└─ hospital/
-
-El archivo **index.html** contiene todo el código:
-
-- creación del mundo  
-- lógica de juego  
-- animaciones  
-- holograma  
-- controles  
-- HUD  
-- carga de modelos  
+  ├─ ambulancia/
+  ├─ hospital/
+  └─ persona/
+```
 
 ---
 
-## ▶️ Cómo Ejecutarlo
+## ▶️ Cómo ejecutar
 
-1. Descarga `index.html` y la carpeta `modelos/`
-2. Abre `index.html` haciendo doble clic.
-3. El juego funcionará automáticamente en tu navegador.
+1. Abre `index.html` en un navegador con WebGL (doble clic o arrastrar al navegador).
+2. Si los archivos usan CDNs (Babylon.js), se recomienda conexión a internet la primera vez.
+3. Se recomienda usar Chrome, Edge o Firefox moderno.
 
-> Recomendado: Chrome, Edge o Firefox (con WebGL habilitado).
+Notas:
+- Si cargas los archivos desde el sistema de archivos y experimentas problemas con importación de módulos, sirve ejecutar un servidor local simple (p. ej. `python -m http.server` desde la carpeta del proyecto).
 
 ---
 
 ## 🎮 Controles
 
-| Tecla | Acción |
-|------|--------|
-| **W** | Avanzar |
-| **S** | Retroceder |
-| **A** | Girar a la izquierda |
-| **D** | Girar a la derecha |
-| **ESPACIO** | Recoger o entregar paciente |
-
----
-
-## 🌆 Mundo 3D
-
-El escenario está compuesto por:
-
-- 2 carreteras rectas
-- 1 carretera curva generada mediante ExtrudeShape
-- Aceras rectas y curvas
-- Casas a ambos lados de las carreteras
-- Árboles, farolas y pasto
-- Un skybox para simular el cielo
-- Un hospital al fondo del mapa
-- Líneas amarillas y bordes blancos
-
----
-
-## 🧠 Lógica del Juego
-
-### ✔ Generación del Paciente
-- Aparece en una de las dos carreteras.
-- Lado aleatorio (izquierda/derecha).
-- Posición Z aleatoria.
-- Se marca con un holograma animado:
-  - anillos giratorios
-  - pulso y transparencia
-  - luz azul tipo sci-fi
-
-### ✔ Recoger Paciente
-Si la ambulancia está cerca:
-
-- El paciente se coloca dentro de la ambulancia.
-- El holograma desaparece.
-
-### ✔ Entregar Paciente
-En el hospital:
-
-- El paciente baja y se orienta hacia el hospital.
-- Se suma al contador.
-- Se genera un nuevo paciente.
-
----
-
-## 🎇 Holograma
-
-Cada paciente se resalta con:
-
-- 4 anillos animados de luz
-- rotación continua
-- cambios de escala
-- variación de transparencia
-- una luz spotlight azul desde abajo
-
-Además, se realiza una cinemática de cámara:
-1. la cámara mira al paciente  
-2. se acerca  
-3. vuelve suavemente a la ambulancia  
-
----
-
-## 📦 Optimización y Refactorización
-
-Se redujo el código repetitivo mediante funciones reutilizables:
-
-- `crearArbolYFarola()`
-- `crearCasaConTecho()`
-- Bucles compactos para carreteras, líneas y bordes
-- Agrupación de variables en `game{}`
-
-Esto mejora:
-
-- claridad  
-- mantenimiento  
-- legibilidad  
-- escalabilidad  
+- W: Avanzar
+- S: Retroceder
+- A: Girar a la izquierda
+- D: Girar a la derecha
+- Espacio: Recoger / entregar paciente
 
 ---
 
 ## 🔧 Requisitos
 
-- Navegador moderno con WebGL
-- Hardware mínimo con GPU integrada
+- Navegador moderno con WebGL habilitado
+- Conexión a internet si el proyecto carga librerías desde CDNs
+- GPU integrada o dedicada (cualquier equipo moderno debe funcionar)
+
+---
+
+## 🛠️ Notas para desarrolladores
+
+- Los scripts principales están en `js/`. Mantén el orden de carga correcto si editas `index.html`.
+- Los modelos 3D están en `modelos/`; si reemplazas modelos asegúrate de mantener las rutas usadas por el cargador.
+- Para depuración, abre la consola del navegador y revisa errores de carga o referencias.
 
 ---
 
 ## 📜 Licencia
 
-Proyecto de uso libre para fines educativos y personales.
+Uso libre para fines educativos y personales.
 
 ---
 
 ## 👤 Autor
 
-Desarrollado como proyecto educativo para la creación de videojuegos y mundos 3D en Web mediante **Babylon.js**.
+Proyecto educativo para práctica de desarrollo 3D en la web con Babylon.js.
+
 
